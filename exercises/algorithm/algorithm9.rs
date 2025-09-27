@@ -1,8 +1,8 @@
 /*
-	heap
-	This question requires you to implement a binary heap function
+    heap
+    This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
+
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -38,8 +38,37 @@ where
 
     pub fn add(&mut self, value: T) {
         //TODO
+        self.items.push(value);
+        self.count += 1;
+        let mut idx = self.count;
+        while idx > 1 && (self.comparator)(&self.items[idx], &self.items[self.parent_idx(idx)]) {
+            let parent_idx = self.parent_idx(idx);
+            self.items.swap(parent_idx, idx);
+            idx = parent_idx;
+        }
     }
+    pub fn pop(&mut self) -> Option<T> {
+        if self.is_empty() {
+            return None;
+        }
 
+        // 交换根节点和最后一个节点
+        self.items.swap(1, self.count);
+
+        // 弹出最后一个节点（原来的根节点）
+        let result = self.items.pop();
+        self.count -= 1;
+        let mut idx = 1;
+        while self.children_present(idx)
+            && (self.comparator)(&self.items[self.smallest_child_idx(idx)], &self.items[idx])
+        {
+            let smallest_child_idx = self.smallest_child_idx(idx);
+            self.items.swap(smallest_child_idx, idx);
+            idx = smallest_child_idx;
+        }
+
+        result
+    }
     fn parent_idx(&self, idx: usize) -> usize {
         idx / 2
     }
@@ -57,8 +86,16 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
-        //TODO
-		0
+        let left = self.left_child_idx(idx);
+        let right = self.right_child_idx(idx);
+        if right > self.count {
+            // 右子不存在
+            left
+        } else if (self.comparator)(&self.items[right], &self.items[left]) {
+            right
+        } else {
+            left
+        }
     }
 }
 
@@ -79,13 +116,15 @@ where
 
 impl<T> Iterator for Heap<T>
 where
-    T: Default,
+    T: Default + Clone,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        if self.is_empty() {
+            return None;
+        }
+        return self.pop();
     }
 }
 
@@ -121,7 +160,18 @@ mod tests {
         let mut heap = MaxHeap::new::<i32>();
         assert_eq!(heap.next(), None);
     }
-
+    #[test]
+    fn test_my_test() {
+        let mut heap = MaxHeap::new();
+        heap.add(4);
+        heap.add(2);
+        heap.add(9);
+        heap.add(11);
+        heap.add(1);
+        for i in heap {
+            println!("{}", i);
+        }
+    }
     #[test]
     fn test_min_heap() {
         let mut heap = MinHeap::new();
